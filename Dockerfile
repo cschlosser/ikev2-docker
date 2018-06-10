@@ -6,6 +6,6 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 ADD ./bin/* /usr/bin/
-ADD ./config/ipsec.conf /config/ipsec.conf
+ADD ./config/ipsec.conf /ipsec.conf
 
 CMD /usr/bin/run

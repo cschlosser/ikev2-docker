@@ -1,5 +1,9 @@
 #!/bin/bash
 
+if [[ ! -f /config/ipsec.secrets ]]; then
+    configure
+fi
+
 cp /config/vpn-certs/vpn-server-cert.pem /etc/ipsec.d/certs/vpn-server-cert.pem
 cp /config/vpn-certs/vpn-server-key.pem /etc/ipsec.d/private/vpn-server-key.pem
 chown root /etc/ipsec.d/private/vpn-server-key.pem

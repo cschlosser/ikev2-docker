@@ -1,0 +1,50 @@
+#!/bin/bash
+
+echo "Enter your DN. E.g.: 'C=US, O=VPN Server, CN=VPN Server Root CA'"
+read DN
+
+echo "Enter your IP or domain name"
+read FQN
+
+cd /config
+
+mkdir vpn-certs
+cd vpn-certs
+
+ipsec pki --gen --type rsa --size 4096 --outform pem > server-root-key.pem
+chmod 600 server-root-key.pem
+
+ipsec pki --self --ca --lifetime 3650 \
+    --in server-root-key.pem \
+    --type rsa --dn "$DN" \
+    --outform pem > server-root-ca.pem
+
+ipsec pki --gen --type rsa --size 4096 --outform pem > vpn-server-key.pem
+
+ipsec pki --pub --in vpn-server-key.pem \
+    --type rsa | ipsec pki --issue --lifetime 1825 \
+    --cacert server-root-ca.pem \
+    --cakey server-root-key.pem \
+    --dn "$DN" \
+    --san $FQN \
+    --flag serverAuth --flag ikeIntermediate \
+    --outform pem > vpn-server-cert.pem
+
+cd ..
+
+echo "$FQN : RSA \"/etc/ipsec.d/private/vpn-server-key.pem\"" > ipsec.secrets
+
+echo "Enter your username"
+read UNAME
+
+echo "Enter your password"
+read -s PASSWD
+
+echo "$UNAME %any% : EAP \"$PASSWD\"" >> ipsec.secrets
+
+if [[ ! $FQN =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+  FQN="@$FQN"
+fi
+
+sed -i '$ d' ipsec.conf
+echo "    leftid=$FQN" >> ipsec.conf

@@ -1,0 +1,18 @@
+#!/bin/bash
+
+cp /config/vpn-certs/vpn-server-cert.pem /etc/ipsec.d/certs/vpn-server-cert.pem
+cp /config/vpn-certs/vpn-server-key.pem /etc/ipsec.d/private/vpn-server-key.pem
+chown root /etc/ipsec.d/private/vpn-server-key.pem
+chgrp root /etc/ipsec.d/private/vpn-server-key.pem
+chmod 600 /etc/ipsec.d/private/vpn-server-key.pem
+
+cp /config/ipsec.* /etc
+
+firewall
+
+sysctl net.ipv4.ip_forward=1
+sysctl net.ipv4.conf.all.accept_redirects=0
+sysctl net.ipv4.conf.all.send_redirects=0
+sysctl net.ipv4.ip_no_pmtu_disc=1
+
+/usr/sbin/ipsec start --nofork
